@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">EF-62 볼륨 자동 설정</string>
+    <string name="notification_channel">자동 볼륨 조절</string>
+    <string name="notification_title">EF-62 볼륨 자동 설정</string>
+</resources>

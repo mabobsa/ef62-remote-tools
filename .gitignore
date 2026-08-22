@@ -1,0 +1,29 @@
+# Android / Gradle
+.gradle/
+**/build/
+local.properties
+.idea/
+*.iml
+
+# Signing material and credentials
+*.jks
+*.keystore
+*signing*.txt
+*.properties.local
+
+# Generated packages and device backups
+*.apk
+*.aab
+*.apks
+*backup*/
+*Backup*/
+outputs/
+
+# Local toolchains and ADB state
+toolchain/
+.android/
+adb-state/
+
+# OS files
+.DS_Store
+Thumbs.db
