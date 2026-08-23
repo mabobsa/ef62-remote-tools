@@ -82,7 +82,7 @@ public final class MainActivity extends Activity {
         root.addView(title, fullWidth(dp(52)));
 
         TextView description = new TextView(this);
-        description.setText("설정 항목을 선택하고 리모컨 좌·우키로 1%씩 조절하세요.\n프로젝터 부팅 시 자동으로 시작됩니다.");
+        description.setText("설정 항목을 선택하고 리모컨 좌·우키로 1%씩 조절하세요.\nWi-Fi 연결 확인 후 자동 볼륨 조절을 시작합니다.");
         description.setTextColor(Color.rgb(185, 211, 226));
         description.setTextSize(18);
         description.setLineSpacing(0, 1.25f);
@@ -108,7 +108,7 @@ public final class MainActivity extends Activity {
         statusView.setLineSpacing(0, 1.3f);
         statusView.setPadding(dp(22), dp(16), dp(22), dp(16));
         statusView.setBackgroundColor(Color.rgb(24, 52, 74));
-        root.addView(statusView, fullWidth(dp(150)));
+        root.addView(statusView, fullWidth(dp(180)));
 
         permissionButton = makeButton("사용 정보 접근 권한 열기");
         permissionButton.setOnClickListener(view -> openUsageAccessSettings());
@@ -215,6 +215,7 @@ public final class MainActivity extends Activity {
         SharedPreferences prefs = getSharedPreferences(VolumeMonitorService.PREFS, MODE_PRIVATE);
         boolean hasAccess = hasUsageStatsAccess();
         boolean running = prefs.getBoolean(VolumeMonitorService.KEY_SERVICE_RUNNING, false);
+        boolean wifiConnected = prefs.getBoolean(VolumeMonitorService.KEY_WIFI_CONNECTED, false);
         String foreground = prefs.getString(VolumeMonitorService.KEY_FOREGROUND_PACKAGE, "");
         int target = prefs.getInt(VolumeMonitorService.KEY_TARGET_PERCENT, 100);
         int actual = prefs.getInt(VolumeMonitorService.KEY_ACTUAL_PERCENT, -1);
@@ -237,9 +238,10 @@ public final class MainActivity extends Activity {
 
         statusView.setText(
                 "서비스: " + (running ? "실행 중" : "시작 중") +
+                "\nWi-Fi: " + (wifiConnected ? "연결 확인됨" : "연결 대기 · 볼륨 조절 중지") +
                 "\n사용 정보 권한: " + (hasAccess ? "허용됨" : "권한 필요") +
                 "\n현재 앱: " + appLabel +
-                "\n목표 볼륨: " + target + "%" +
+                "\n목표 볼륨: " + (wifiConnected ? target + "%" : "Wi-Fi 연결 대기") +
                 "\n현재 볼륨: " + actualText +
                 "\n마지막 확인: " + updated
         );

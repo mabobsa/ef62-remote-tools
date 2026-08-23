@@ -13,6 +13,9 @@ import android.content.Intent;
 import android.content.SharedPreferences;
 import android.content.pm.ApplicationInfo;
 import android.media.AudioManager;
+import android.net.ConnectivityManager;
+import android.net.Network;
+import android.net.NetworkCapabilities;
 import android.os.Build;
 import android.os.Handler;
 import android.os.IBinder;
@@ -29,6 +32,7 @@ public final class VolumeMonitorService extends Service {
     public static final String KEY_LAST_UPDATE = "last_update";
     public static final String KEY_USAGE_ACCESS = "usage_access";
     public static final String KEY_SERVICE_RUNNING = "service_running";
+    public static final String KEY_WIFI_CONNECTED = "wifi_connected";
     public static final String KEY_NORMAL_PERCENT = "normal_percent";
     public static final String KEY_YOUTUBE_PERCENT = "youtube_percent";
     public static final int DEFAULT_NORMAL_PERCENT = 100;
@@ -55,12 +59,14 @@ public final class VolumeMonitorService extends Service {
 
     private UsageStatsManager usageStatsManager;
     private AudioManager audioManager;
+    private ConnectivityManager connectivityManager;
     private SharedPreferences preferences;
     private String foregroundPackage = "";
     private int lastTargetPercent = -1;
     private int lastActualPercent = -1;
     private boolean lastUsageAccess;
     private boolean lastYouTubeActive;
+    private boolean lastWifiConnected;
     private long usageQueryStart;
 
     @Override
@@ -68,14 +74,19 @@ public final class VolumeMonitorService extends Service {
         super.onCreate();
         usageStatsManager = (UsageStatsManager) getSystemService(Context.USAGE_STATS_SERVICE);
         audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+        connectivityManager = (ConnectivityManager) getSystemService(Context.CONNECTIVITY_SERVICE);
         preferences = getSharedPreferences(PREFS, MODE_PRIVATE);
         createNotificationChannel();
         int normalPercent = readPercent(KEY_NORMAL_PERCENT, DEFAULT_NORMAL_PERCENT);
-        startForeground(NOTIFICATION_ID, buildNotification(normalPercent, false));
+        boolean wifiConnected = isValidatedWifiConnected();
+        startForeground(NOTIFICATION_ID, buildNotification(normalPercent, false, wifiConnected));
 
         long now = System.currentTimeMillis();
         usageQueryStart = now - INITIAL_LOOKBACK_MS;
-        preferences.edit().putBoolean(KEY_SERVICE_RUNNING, true).apply();
+        preferences.edit()
+                .putBoolean(KEY_SERVICE_RUNNING, true)
+                .putBoolean(KEY_WIFI_CONNECTED, wifiConnected)
+                .apply();
         handler.post(pollRunnable);
     }
 
@@ -109,16 +120,21 @@ public final class VolumeMonitorService extends Service {
         int normalPercent = readPercent(KEY_NORMAL_PERCENT, DEFAULT_NORMAL_PERCENT);
         int youtubePercent = readPercent(KEY_YOUTUBE_PERCENT, DEFAULT_YOUTUBE_PERCENT);
         int targetPercent = youtubeActive ? youtubePercent : normalPercent;
-        int actualPercent = applyAndReadVolume(targetPercent);
+        boolean wifiConnected = isValidatedWifiConnected();
+        int actualPercent = wifiConnected
+                ? applyAndReadVolume(targetPercent)
+                : readCurrentVolumePercent();
 
         if (targetPercent != lastTargetPercent
                 || actualPercent != lastActualPercent
                 || usageAccess != lastUsageAccess
-                || youtubeActive != lastYouTubeActive) {
+                || youtubeActive != lastYouTubeActive
+                || wifiConnected != lastWifiConnected) {
             lastTargetPercent = targetPercent;
             lastActualPercent = actualPercent;
             lastUsageAccess = usageAccess;
             lastYouTubeActive = youtubeActive;
+            lastWifiConnected = wifiConnected;
 
             preferences.edit()
                     .putString(KEY_FOREGROUND_PACKAGE, foregroundPackage)
@@ -127,11 +143,15 @@ public final class VolumeMonitorService extends Service {
                     .putLong(KEY_LAST_UPDATE, System.currentTimeMillis())
                     .putBoolean(KEY_USAGE_ACCESS, usageAccess)
                     .putBoolean(KEY_SERVICE_RUNNING, true)
+                    .putBoolean(KEY_WIFI_CONNECTED, wifiConnected)
                     .apply();
 
             NotificationManager manager = getSystemService(NotificationManager.class);
             if (manager != null) {
-                manager.notify(NOTIFICATION_ID, buildNotification(targetPercent, youtubeActive));
+                manager.notify(
+                        NOTIFICATION_ID,
+                        buildNotification(targetPercent, youtubeActive, wifiConnected)
+                );
             }
         }
     }
@@ -187,8 +207,39 @@ public final class VolumeMonitorService extends Service {
                 Log.e(TAG, "No permission to set media volume", exception);
             }
         }
+        return readCurrentVolumePercent();
+    }
+
+    private int readCurrentVolumePercent() {
+        if (audioManager == null || audioManager.isVolumeFixed()) {
+            return -1;
+        }
+        int max = audioManager.getStreamMaxVolume(AudioManager.STREAM_MUSIC);
+        if (max <= 0) {
+            return -1;
+        }
         int actual = audioManager.getStreamVolume(AudioManager.STREAM_MUSIC);
         return Math.round(actual * 100f / max);
+    }
+
+    private boolean isValidatedWifiConnected() {
+        if (connectivityManager == null) {
+            return false;
+        }
+        try {
+            Network activeNetwork = connectivityManager.getActiveNetwork();
+            if (activeNetwork == null) {
+                return false;
+            }
+            NetworkCapabilities capabilities =
+                    connectivityManager.getNetworkCapabilities(activeNetwork);
+            return capabilities != null
+                    && capabilities.hasTransport(NetworkCapabilities.TRANSPORT_WIFI)
+                    && capabilities.hasCapability(NetworkCapabilities.NET_CAPABILITY_VALIDATED);
+        } catch (RuntimeException exception) {
+            Log.w(TAG, "Unable to read Wi-Fi connectivity", exception);
+            return false;
+        }
     }
 
     private boolean hasUsageStatsAccess() {
@@ -221,7 +272,11 @@ public final class VolumeMonitorService extends Service {
         }
     }
 
-    private Notification buildNotification(int targetPercent, boolean youtubeActive) {
+    private Notification buildNotification(
+            int targetPercent,
+            boolean youtubeActive,
+            boolean wifiConnected
+    ) {
         Intent activityIntent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(
                 this,
@@ -230,9 +285,14 @@ public final class VolumeMonitorService extends Service {
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
-        String text = youtubeActive
-                ? "YouTube 실행 중 · 볼륨 " + targetPercent + "%"
-                : "자동 조절 중 · 볼륨 " + targetPercent + "%";
+        String text;
+        if (!wifiConnected) {
+            text = "Wi-Fi 연결 확인 대기 중 · 볼륨 조절 일시 중지";
+        } else if (youtubeActive) {
+            text = "YouTube 실행 중 · 볼륨 " + targetPercent + "%";
+        } else {
+            text = "자동 조절 중 · 볼륨 " + targetPercent + "%";
+        }
 
         Notification.Builder builder = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O
                 ? new Notification.Builder(this, CHANNEL_ID)

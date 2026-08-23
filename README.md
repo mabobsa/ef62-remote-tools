@@ -14,6 +14,8 @@ Epson Lifestudio Pop Plus EF-62의 Google TV 환경을 위한 Android TV 도구 
 - 일반 앱과 YouTube 볼륨을 각각 설정
 - 리모컨 좌·우키로 1% 단위 조절
 - 1초마다 지정 볼륨 복원
+- 검증된 Wi-Fi 연결 전에는 볼륨 조절 대기
+- Wi-Fi 연결 해제 시 조절 중지, 재연결 시 자동 재개
 - 부팅 및 앱 업데이트 후 포그라운드 서비스 자동 시작
 - `livetvx://cltv.dev/...` 링크를 받아 쿠팡플레이 실행
 
