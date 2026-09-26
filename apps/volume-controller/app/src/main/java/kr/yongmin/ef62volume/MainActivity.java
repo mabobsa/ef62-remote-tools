@@ -17,6 +17,7 @@ import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
 import android.view.Gravity;
+import android.view.KeyEvent;
 import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.LinearLayout;
@@ -32,6 +33,7 @@ public final class MainActivity extends Activity {
     private final Handler handler = new Handler(Looper.getMainLooper());
     private TextView statusView;
     private Button permissionButton;
+    private Button liveTvTargetButton;
     private SeekBar normalSeekBar;
 
     private final Runnable refreshRunnable = new Runnable() {
@@ -101,6 +103,31 @@ public final class MainActivity extends Activity {
                 VolumeMonitorService.KEY_YOUTUBE_PERCENT,
                 prefs.getInt(VolumeMonitorService.KEY_YOUTUBE_PERCENT, VolumeMonitorService.DEFAULT_YOUTUBE_PERCENT)
         );
+
+        liveTvTargetButton = makeButton("");
+        refreshLiveTvTargetLabel();
+        liveTvTargetButton.setOnKeyListener((view, keyCode, event) -> {
+            if (event.getAction() != KeyEvent.ACTION_DOWN) {
+                return false;
+            }
+            if (keyCode == KeyEvent.KEYCODE_DPAD_LEFT) {
+                setLiveTvTarget(LiveTvRedirectActivity.TARGET_COUPANG_PLAY);
+                return true;
+            }
+            if (keyCode == KeyEvent.KEYCODE_DPAD_RIGHT) {
+                setLiveTvTarget(LiveTvRedirectActivity.TARGET_DISNEY_PLUS);
+                return true;
+            }
+            return false;
+        });
+        liveTvTargetButton.setOnClickListener(view -> {
+            String current = getSharedPreferences(VolumeMonitorService.PREFS, MODE_PRIVATE)
+                    .getString(LiveTvRedirectActivity.KEY_LIVE_TV_TARGET, LiveTvRedirectActivity.DEFAULT_TARGET);
+            setLiveTvTarget(LiveTvRedirectActivity.TARGET_COUPANG_PLAY.equals(current)
+                    ? LiveTvRedirectActivity.TARGET_DISNEY_PLUS
+                    : LiveTvRedirectActivity.TARGET_COUPANG_PLAY);
+        });
+        root.addView(liveTvTargetButton, fullWidth(dp(60)));
 
         statusView = new TextView(this);
         statusView.setTextColor(Color.WHITE);
@@ -196,6 +223,23 @@ public final class MainActivity extends Activity {
         button.setAllCaps(false);
         button.setFocusable(true);
         return button;
+    }
+
+    private void setLiveTvTarget(String target) {
+        getSharedPreferences(VolumeMonitorService.PREFS, MODE_PRIVATE)
+                .edit()
+                .putString(LiveTvRedirectActivity.KEY_LIVE_TV_TARGET, target)
+                .apply();
+        refreshLiveTvTargetLabel();
+    }
+
+    private void refreshLiveTvTargetLabel() {
+        String target = getSharedPreferences(VolumeMonitorService.PREFS, MODE_PRIVATE)
+                .getString(LiveTvRedirectActivity.KEY_LIVE_TV_TARGET, LiveTvRedirectActivity.DEFAULT_TARGET);
+        String label = LiveTvRedirectActivity.TARGET_COUPANG_PLAY.equals(target)
+                ? "쿠팡플레이"
+                : "디즈니+";
+        liveTvTargetButton.setText("Live TV 실행 앱: " + label + "  (← 쿠팡 / 디즈니 →)");
     }
 
     private LinearLayout.LayoutParams fullWidth(int height) {

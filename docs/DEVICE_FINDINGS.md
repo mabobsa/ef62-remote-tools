@@ -11,7 +11,7 @@ android.intent.action.VIEW
 livetvx://cltv.dev/...
 ```
 
-기본 처리 앱은 `com.cltv.fast/com.iwedia.cltv.MainActivity`입니다. 기본 앱을 사용자 영역에서 비활성화하면 볼륨 컨트롤러의 `LiveTvRedirectActivity`가 링크를 받아 쿠팡플레이(`com.coupang.mobile.play`)를 엽니다.
+기본 처리 앱은 `com.cltv.fast/com.iwedia.cltv.MainActivity`입니다. 기본 앱을 사용자 영역에서 비활성화하면 볼륨 컨트롤러의 `LiveTvRedirectActivity`가 링크를 받아 설정 화면에서 선택한 쿠팡플레이(`com.coupang.mobile.play`) 또는 디즈니+(`com.disney.disneyplus`)를 엽니다.
 
 ```powershell
 adb shell pm disable-user --user 0 com.cltv.fast
@@ -41,6 +41,7 @@ Component: com.amazon.ignition.IgnitionActivity
 | --- | --- | --- |
 | YouTube | `com.google.android.youtube.tv` | 기기별 런처 Activity |
 | 쿠팡플레이 | `com.coupang.mobile.play` | `com.coupang.play.features.provision.ProvisioningActivity` |
+| 디즈니+ | `com.disney.disneyplus` | `com.bamtechmedia.dominguez.main.MainActivity` |
 | TVING | `net.cj.em.tving` | `.ui.main.MainActivity` |
 
 ## 펌웨어 의존성

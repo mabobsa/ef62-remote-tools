@@ -10,7 +10,7 @@ Epson Lifestudio Pop Plus EF-62의 Google TV에서 동작하는 Android TV 앱�
 - 1초마다 현재 상태를 확인하므로 리모컨으로 볼륨을 바꿔도 지정 값으로 복원
 - 검증된 Wi-Fi 연결이 확인되기 전에는 볼륨을 변경하지 않음
 - Wi-Fi 연결이 끊기면 자동 조절을 일시 중지하고 재연결 시 자동 재개
-- EF-62 리모컨의 Live TV 버튼을 누르면 쿠팡플레이 실행
+- 설정 화면에서 Live TV 버튼 실행 앱을 쿠팡플레이 또는 디즈니+로 선택
 
 ## 최초 설정
 
@@ -20,6 +20,7 @@ Epson Lifestudio Pop Plus EF-62의 Google TV에서 동작하는 Android TV 앱�
 4. 앱으로 돌아와 **자동 조절 시작 / 다시 시작**을 누릅니다.
 5. 상시 볼륨과 YouTube 볼륨 막대를 선택하고 리모컨 좌·우키로 값을 조절합니다.
 6. **YouTube 열어서 테스트**로 설정값 전환을 확인합니다.
+7. **Live TV 실행 앱** 항목에서 리모컨 왼쪽은 쿠팡플레이, 오른쪽은 디즈니+를 선택합니다.
 
 설정값은 앱 업데이트와 재부팅 후에도 유지됩니다. 사용 정보 접근 권한이 없으면 YouTube 여부를 알 수 없으므로 상시 볼륨을 적용합니다.
 
@@ -29,7 +30,7 @@ Google TV에서 개발자 옵션과 USB/네트워크 디버깅을 켠 뒤 PC에�
 
 ```powershell
 adb connect <EF-62의-IP주소>:5555
-adb install -r .\EF62-Volume-Auto-v1.3.0.apk
+adb install -r .\EF62-Volume-Auto-v1.5.0.apk
 ```
 
 Live TV 버튼 리디렉션을 사용하려면 기기 기본 Live TV 앱을 사용자 영역에서 비활성화합니다.
@@ -65,7 +66,7 @@ adb shell dumpsys activity services kr.yongmin.ef62volume
 JDK 17과 Android SDK 35가 있는 환경에서:
 
 ```powershell
-gradle --no-daemon assembleRelease
+.\gradlew.bat assembleRelease
 ```
 
 릴리스 출력은 `app/build/outputs/apk/release/app-release-unsigned.apk`입니다.

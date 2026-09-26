@@ -6,7 +6,7 @@ Epson Lifestudio Pop Plus EF-62의 Google TV 환경을 위한 Android TV 도구 
 
 | 앱 | 기능 | 패키지 |
 | --- | --- | --- |
-| `volume-controller` | 부팅 후 자동 실행, 일반/YouTube 볼륨 자동 적용, Live TV 버튼으로 쿠팡플레이 실행 | `kr.yongmin.ef62volume` |
+| `volume-controller` | 부팅 후 자동 실행, 일반/YouTube 볼륨 자동 적용, Live TV 버튼 실행 앱 선택 | `kr.yongmin.ef62volume` |
 | `prime-tving-redirect` | Prime Video 전용 버튼으로 TVING 실행 | `com.amazon.amazonvideo.livingroom` |
 
 ### 볼륨 컨트롤러
@@ -17,7 +17,7 @@ Epson Lifestudio Pop Plus EF-62의 Google TV 환경을 위한 Android TV 도구 
 - 검증된 Wi-Fi 연결 전에는 볼륨 조절 대기
 - Wi-Fi 연결 해제 시 조절 중지, 재연결 시 자동 재개
 - 부팅 및 앱 업데이트 후 포그라운드 서비스 자동 시작
-- `livetvx://cltv.dev/...` 링크를 받아 쿠팡플레이 실행
+- `livetvx://cltv.dev/...` 링크를 받아 설정된 쿠팡플레이 또는 디즈니+ 실행
 
 ### Prime 버튼 리디렉터
 
@@ -57,7 +57,7 @@ gradle --no-daemon assembleRelease
 
 자세한 설치 및 복구 명령은 각 앱 문서를 참고하세요.
 
-- [볼륨 컨트롤러와 Live TV → 쿠팡플레이](apps/volume-controller/README.md)
+- [볼륨 컨트롤러와 Live TV → 쿠팡플레이/디즈니+](apps/volume-controller/README.md)
 - [Prime Video 버튼 → TVING](apps/prime-tving-redirect/README.md)
 - [기기 조사 결과](docs/DEVICE_FINDINGS.md)
 

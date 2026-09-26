@@ -19,6 +19,7 @@
         <package android:name="com.google.android.youtube.tv" />
         <package android:name="com.google.android.youtube" />
         <package android:name="com.coupang.mobile.play" />
+        <package android:name="com.disney.disneyplus" />
     </queries>
 
     <application
